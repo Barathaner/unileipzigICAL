@@ -4,13 +4,13 @@
 client/node_modules
 client/.pnp
 client/.pnp.js
-client/client/# testing
+# testing
 client/coverage
 
 # production
 client/build
 
-client/# misc
+# misc
 client/.DS_Store
 client/.env.local
 client/.env.development.local
