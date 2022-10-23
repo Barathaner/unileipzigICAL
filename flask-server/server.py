@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import (Flask,send_file)
 from bs4 import BeautifulSoup
 import requests
 from icalendar import Calendar, Event, vCalAddress, vText
@@ -28,6 +28,10 @@ weekdaydict = {
 def removelines(value):
     return value.replace('\n','')
 
+
+def parseUmlaute(str):
+    spcial_char_map = {ord('ä'):'ae', ord('ü'):'ue', ord('ö'):'oe', ord('ß'):'ss',ord('Ä'):'Ae', ord('Ü'):'Ue', ord('Ö'):'Oe'}
+    return str.translate(spcial_char_map)
 def parseweekday(weekday):
     try:
         a = weekdaydict[weekday]
@@ -68,7 +72,21 @@ def members():
     moduleNames = []
     for m in moduleList:
         moduleNames.append(m.name)
-    return{"members": moduleNames}
+    return {"members": moduleNames}
+
+
+
+@app.route("/ics")
+def ics():
+    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
+    moduleList = scrapeForTimeTable(url)
+    ics =createICAL(moduleList)
+    f = open(os.path.join('./', 'example.ics'), 'wb')
+    f.write(ics)
+    f.close()
+
+    return send_file('./example.ics', as_attachment=True)
+
 
 
 def scrapeForTimeTable(url):
@@ -78,7 +96,7 @@ def scrapeForTimeTable(url):
     rows = stundenplan.find_all('div', attrs={'class':'MODUL'})
     moduleList=[]
     for module in rows:
-        name = module.find('div', attrs={'class':'n-modul-title'}).text
+        name = parseUmlaute(module.find('div', attrs={'class':'n-modul-title'}).text)
         id = module.find('div', attrs={'class':'n-modul-id'}).text
         events = module.find_all('div', attrs={'class':'s-termin-entry'})
         newevents=[]
@@ -87,7 +105,7 @@ def scrapeForTimeTable(url):
             if ev.find('div',attrs={'class':'s_termin_typ'}) is None:
                 print("No eventname")
             else:
-                evname = ev.find('div',attrs={'class':'s_termin_typ'}).text
+                evname = parseUmlaute(ev.find('div',attrs={'class':'s_termin_typ'}).text)
             if ev.find('div',attrs={'class':'s_termin_von'}) is None:
                 print("No start")
             else:
@@ -100,14 +118,14 @@ def scrapeForTimeTable(url):
                 print("No day")
             else:
                 evweekday = ev.find('div',attrs={'class':'s_termin_zeit'}).text
-            if ev.find('div',attrs={'class':'s_termin_raum"'}) is None:
+            if ev.find('div',attrs={'class':'s_termin_raum'}) is None:
                 print("No room")
             else:
-                evlocation = ev.find('div',attrs={'class':'s_termin_raum"'}).text
+                evlocation = parseUmlaute(ev.find('div',attrs={'class':'s_termin_raum'}).text)
             if ev.find('div',attrs={'class':'s_termin_dozent'}) is None:
                 print("No teacher")
             else:
-                evteacher = ev.find('div',attrs={'class':'s_termin_dozent'}).text
+                evteacher = parseUmlaute(ev.find('div',attrs={'class':'s_termin_dozent'}).text)
             newevents.append(UniEvent(evname.strip(),evstart,evstop,parseweekday(evweekday.strip()),evlocation.strip(), removelines(evteacher.strip())))
 
         moduleList.append(Module(id,name,newevents))
@@ -126,7 +144,7 @@ def convertevToJson(ev):
     return evJson
 
 
-def writeModuleListToJSON(moduleLi):
+def ModuleListToJSON(moduleLi):
     modJson=[]
     for mod in moduleLi:
         jsonEvList = []
@@ -139,12 +157,10 @@ def writeModuleListToJSON(moduleLi):
         }
         modJson.append(modDict)
         jsonString = json.dumps(modJson)
-        jsonFile = open("data.json", "w")
-        jsonFile.write(jsonString)
-        jsonFile.close()
+    return jsonString
 
 
-def createICAL(modules,directory):
+def createICAL(modules):
 
 
     cal = Calendar()
@@ -160,35 +176,16 @@ def createICAL(modules,directory):
                     event.add('dtend', datetime(dt.year, dt.month, dt.day, int(ev.stop.split(':')[0]),int(ev.stop.split(':')[1]), 0, tzinfo=pytz.utc))
                     event.add('dtstamp', datetime(dt.year, dt.month, dt.day, int(ev.stop.split(':')[0]),int(ev.stop.split(':')[1]), 0, tzinfo=pytz.utc))
 
-                    # Adding Organizer
-                    organizer = vCalAddress('MAILTO:karl-jahnel@web.de')
-                    organizer.params['cn'] = vText('Organizer')
-                    organizer.params['role'] = vText('CHAIR')
-                    event['organizer'] = organizer
-
-                    # Adding attendee
-                    attendee = vCalAddress('MAILTO:')
-                    attendee.params['cn'] = vText(ev.teacher)
-                    attendee.params['ROLE'] = vText('REQ-PARTICIPANT')
-                    event.add('attendee', attendee, encode=0)
-
-
                     # Adding location
-                    event['location'] = ev.location
+                    event['location'] = vText(ev.location)
 
                     # Adding events to calendar
                     cal.add_component(event)
 
-    # print(directory)
-    f = open(os.path.join(directory, 'example.ics'), 'wb')
-    f.write(cal.to_ical())
-    f.close()
+    return cal.to_ical()
 
 
 if __name__ == '__main__':
-    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
-    moduleList = scrapeForTimeTable(url)
-    writeModuleListToJSON(moduleList)
     app.run(debug=True)
 #         while q:
 #         print("select your modules by ID or enter q for creating calendar")
