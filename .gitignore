@@ -23,3 +23,4 @@ client/yarn-error.log*
 
 .idea
 flask-server/venv
+
