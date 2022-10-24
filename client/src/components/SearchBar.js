@@ -28,32 +28,33 @@ function SearchBar({ addMods,placeholder, data }) {
 
     return (
         <div className="search">
-            <div className="searchInputs">
-                <input
+            <div className="searchInputs row ">
+                <input className="col-10 border-0 shadow-none"
                     type="text"
                     placeholder={placeholder}
                     value={wordEntered}
                     onChange={handleFilter}
                 />
-                <div className="searchIcon">
+                <div className="searchIcon d-flex col-2 border-0 justify-content-center">
                     {filteredData.length === 0 ? (
                         <SearchIcon />
                     ) : (
                         <CloseIcon id="clearBtn" onClick={clearInput} />
                     )}
                 </div>
+
+                {filteredData.length != 0 && (
+                    <div className="dataResult">
+                        {filteredData.slice(0, 15).map((value, key) => {
+                            return (
+                                <a className="dataItem text-decoration-none overflow-hidden"  target="_blank">
+                                    <p className="text-decoration-none overflow-hidden" onClick={e => addMods(value.name)}>{value.name} </p>
+                                </a>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
-            {filteredData.length != 0 && (
-                <div className="dataResult">
-                    {filteredData.slice(0, 15).map((value, key) => {
-                        return (
-                            <a className="dataItem"  target="_blank">
-                                <p onClick={e => addMods(value.name)}>{value.name} </p>
-                            </a>
-                        );
-                    })}
-                </div>
-            )}
         </div>
     );
 }

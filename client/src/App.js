@@ -24,8 +24,12 @@ function App() {
 
     return (
         <div className="App">
-            <h2 className="welcomeText">Such deine Module zusammen!</h2>
-            <SearchBar  addMods={handleaddMods} placeholder="Enter a Subject Name..." data={moduleList} />
+            <div className="row">
+                <div className="col-4"></div>
+                <div className="col-4">
+                    <SearchBar  addMods={handleaddMods} placeholder="Enter a Subject Name..." data={moduleList} /></div>
+                <div className="col-4"></div>
+            </div>
             <div className="accordion">
                 {moduleList.map((mods,index) => {
                     return <Accordion title={mods.name} events={mods.events}/>
