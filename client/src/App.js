@@ -27,9 +27,9 @@ function App() {
             <h2 className="welcomeText">Such deine Module zusammen!</h2>
             <SearchBar  addMods={handleaddMods} placeholder="Enter a Subject Name..." data={moduleList} />
             <div className="accordion">
-                {names.map(( name) => (
-                    <Accordion title={name} content="sdwasdf" />
-                ))}
+                {moduleList.map((mods,index) => {
+                    return <Accordion title={mods.name} events={mods.events}/>
+                })}
             </div>
         </div>
     );

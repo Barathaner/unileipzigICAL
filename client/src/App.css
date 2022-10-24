@@ -6,19 +6,14 @@
   align-items: center;
   flex-direction: column;
   font-family: "Nunito", sans-serif;
-  box-sizing: border-box;
   background-image: linear-gradient(90deg, #410076, #8820dd);
 }
 body {
   padding: 0;
   margin: 0;
 }
-.welcomeText{
-  display: flex;
-  align-items: center;
-  font-family: "Nunito", sans-serif;
-  color: #dddddd;
-}
+
+
 
 .accordion {
   max-width: 600px;

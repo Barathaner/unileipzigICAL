@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
+import './Accordion.css'
+import Events from "./Events";
 
-const Accordion = ({ title, content }) => {
+const Accordion = ({title, events}) => {
     const [isActive, setIsActive] = useState(false);
 
     return (
@@ -9,9 +11,14 @@ const Accordion = ({ title, content }) => {
                 <div>{title}</div>
                 <div>{isActive ? '-' : '+'}</div>
             </div>
-            {isActive && <div className="accordion-content">{content}</div>}
+            {isActive && <div>
+                {events.map((event,index) => {
+                        return <Events typ={event.evname} start={event.start} end={event.stop} weekday={event.weekday} location={event.location} teacher={event.teacher}/>
+                }
+
+                )}
+            </div>}
         </div>
     );
 };
-
 export default Accordion;

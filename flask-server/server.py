@@ -187,17 +187,6 @@ def createICAL(modules):
 
 if __name__ == '__main__':
     app.run(debug=True)
-#         while q:
-#         print("select your modules by ID or enter q for creating calendar")
-#
-#         modID=input()
-#         if modID=="q":
-#             q = False
-#             continue
-#         else:
-#             for mods in moduleList:
-#                 if modID == mods.id:
-#                     savedList.append(mods)
 
 
 
