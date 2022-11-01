@@ -7,6 +7,10 @@ function App() {
 
     const [data, setData] = useState([{}])
     const [names, setNames] = useState([]);
+    const [chosen, setChosen] = useState([]);
+
+
+
     useEffect(() =>{
         fetch("/members").then(
             res => res.json()
@@ -18,8 +22,21 @@ function App() {
         )
         },[])
 
+
+
+        function postdata(){
+
+            fetch('http://localhost:3000/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(names)
+            })
+                .then((response) => response.json())
+                .then((data) => setChosen(data));
+        }
     function handleaddMods(evt) {
         setNames(current => [...current, evt]);
+        postdata()
     }
 
     return (
@@ -31,10 +48,11 @@ function App() {
                 <div className="col-4"></div>
             </div>
             <div className="accordion">
-                {moduleList.map((mods,index) => {
+                {chosen.map((mods,index) => {
                     return <Accordion title={mods.name} events={mods.events}/>
                 })}
             </div>
+            <button>Get ICS</button>
         </div>
     );
 /*        <div>

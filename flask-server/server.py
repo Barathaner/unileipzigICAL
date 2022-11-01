@@ -1,4 +1,5 @@
-from flask import (Flask,send_file)
+from flask import (Flask,send_file,request,jsonify)
+from flask_cors import CORS, cross_origin
 from bs4 import BeautifulSoup
 import requests
 from icalendar import Calendar, Event, vCalAddress, vText
@@ -8,7 +9,8 @@ import os
 import json
 from pathlib import Path
 from datetime import timedelta, date
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../client/build', static_url_path='')
+cors = CORS(app)
 
 
 
@@ -25,67 +27,6 @@ weekdaydict = {
     "samstags": 5,
     "sonntags": 6
 }
-def removelines(value):
-    return value.replace('\n','')
-
-
-def parseUmlaute(str):
-    spcial_char_map = {ord('ä'):'ae', ord('ü'):'ue', ord('ö'):'oe', ord('ß'):'ss',ord('Ä'):'Ae', ord('Ü'):'Ue', ord('Ö'):'Oe'}
-    return str.translate(spcial_char_map)
-def parseweekday(weekday):
-    try:
-        a = weekdaydict[weekday]
-        return a
-    except:
-        print("no matching keys")
-        return None
-
-
-class UniEvent:
-  def __init__(self, name,start,stop,weekday,location,teacher):
-    self.name = name
-    self.start = start
-    self.stop = stop
-    self.weekday = weekday
-    self.location = location
-    self.teacher = teacher
-
-
-
-class Module:
-  def __init__(self, id,name,events):
-    self.id = id
-    self.name = name
-    self.events = events
-
-
-def daterange(date1, date2):
-    for n in range(int ((date2 - date1).days)+1):
-        yield date1 + timedelta(n)
-
-
-#Members API Route
-@app.route("/members")
-def members():
-    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
-    moduleList = scrapeForTimeTable(url)
-    moduleNames = []
-    for m in moduleList:
-        moduleNames.append(m.name)
-    return {"members": moduleNames}
-
-
-
-@app.route("/ics")
-def ics():
-    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
-    moduleList = scrapeForTimeTable(url)
-    ics =createICAL(moduleList)
-    f = open(os.path.join('./', 'example.ics'), 'wb')
-    f.write(ics)
-    f.close()
-
-    return send_file('./example.ics', as_attachment=True)
 
 
 
@@ -183,6 +124,93 @@ def createICAL(modules):
                     cal.add_component(event)
 
     return cal.to_ical()
+
+
+def removelines(value):
+    return value.replace('\n','')
+
+
+def parseUmlaute(str):
+    spcial_char_map = {ord('ä'):'ae', ord('ü'):'ue', ord('ö'):'oe', ord('ß'):'ss',ord('Ä'):'Ae', ord('Ü'):'Ue', ord('Ö'):'Oe'}
+    return str.translate(spcial_char_map)
+def parseweekday(weekday):
+    try:
+        a = weekdaydict[weekday]
+        return a
+    except:
+        print("no matching keys")
+        return None
+
+
+class UniEvent:
+  def __init__(self, name,start,stop,weekday,location,teacher):
+    self.name = name
+    self.start = start
+    self.stop = stop
+    self.weekday = weekday
+    self.location = location
+    self.teacher = teacher
+
+
+
+class Module:
+  def __init__(self, id,name,events):
+    self.id = id
+    self.name = name
+    self.events = events
+
+
+def daterange(date1, date2):
+    for n in range(int ((date2 - date1).days)+1):
+        yield date1 + timedelta(n)
+
+
+#Members API Route
+@app.route("/members",methods=['GET'])
+@cross_origin()
+def members():
+    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
+    moduleList = scrapeForTimeTable(url)
+    moduleNames = []
+    for m in moduleList:
+        moduleNames.append(m.name)
+    return {"members": moduleNames}
+
+
+
+@app.route("/ics",methods=['GET'])
+@cross_origin()
+def ics():
+    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
+    moduleList = scrapeForTimeTable(url)
+    ics =createICAL(moduleList)
+    f = open(os.path.join('./', 'example.ics'), 'wb')
+    f.write(ics)
+    f.close()
+
+    return send_file('./example.ics', as_attachment=True)
+
+@app.route('/add', methods=['POST'])
+@cross_origin()
+def add():
+    data = request.get_json()
+    print(data)
+    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
+    moduleList = scrapeForTimeTable(url)
+    mods=[]
+    for dat in data:
+        for mod in moduleList:
+            if mod.name == dat:
+                mods.append(mod)
+    datatoJson= ModuleListToJSON(mods)
+    print(datatoJson)
+    return datatoJson
+
+@app.route('/')
+@cross_origin()
+def serve():
+    return send_from_directory(app.static_folder,'index.html')
+
 
 
 if __name__ == '__main__':
