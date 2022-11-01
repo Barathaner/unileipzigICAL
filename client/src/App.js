@@ -26,7 +26,7 @@ function App() {
 
         function postdata(){
 
-            fetch('http://localhost:3000/add', {
+            fetch('/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(names)
