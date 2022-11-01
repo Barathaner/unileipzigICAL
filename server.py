@@ -1,5 +1,6 @@
 from flask import (Flask,send_file,request,jsonify)
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
+from flask_cors import cross_origin
 from bs4 import BeautifulSoup
 import requests
 from icalendar import Calendar, Event, vCalAddress, vText
@@ -9,7 +10,7 @@ import os
 import json
 from pathlib import Path
 from datetime import timedelta, date
-app = Flask(__name__, static_folder='../client/build', static_url_path='')
+app = Flask(__name__, static_folder='./client/build', static_url_path='')
 cors = CORS(app)
 
 
