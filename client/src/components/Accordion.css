@@ -1,26 +1,33 @@
 
 .accordion {
-    max-width: 600px;
-    margin: 2rem auto;
+
+    width: 100%;
+    border-radius: 6px;
+    overflow: hidden;
+    overflow-y: auto;
 }
 
 .accordion-title {
-    display: flex;
-    flex-direction: row;
     justify-content: space-between;
     cursor: pointer;
-    background-color: #21aeca;
+    background-color: white;
+    display: flex;
+    flex-direction: row;
 }
 
 .accordion-title:hover {
-    background-color: #3ab4cc;
+    background-color: white;
 }
 
 .accordion-title,
 .accordion-content {
-    padding: 1rem;
+
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+    font-size: 18px;
+    padding: 15px;
 }
 
 .accordion-content {
-    background-color: #39b9d2;
+    justify-content: center;
+    background-color: white;
 }

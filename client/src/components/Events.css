@@ -1,7 +1,10 @@
 .event-container {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: center;
     cursor: pointer;
-    background-color: #ffffff;
+    padding: 15px;
+    background-color: white;
+    overflow: hidden;
+    overflow-y: auto;
 }

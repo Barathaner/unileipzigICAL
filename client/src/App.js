@@ -16,8 +16,7 @@ function App() {
             res => res.json()
         ).then(
             data =>{
-                setData(data)
-                console.log(data)
+                setData(data.members)
             }
         )
         },[])
@@ -42,17 +41,37 @@ function App() {
     return (
         <div className="App">
             <div className="row">
-                <div className="col-4"></div>
-                <div className="col-4">
-                    <SearchBar  addMods={handleaddMods} placeholder="Enter a Subject Name..." data={moduleList} /></div>
-                <div className="col-4"></div>
+                <div className="col-2"></div>
+                <div className="col-8">
+                    <SearchBar  addMods={handleaddMods} placeholder="Enter a Subject Name..." data={data} /></div>
+
+
+                <div className="col-2"></div>
             </div>
-            <div className="accordion">
-                {chosen.map((mods,index) => {
-                    return <Accordion title={mods.name} events={mods.events}/>
-                })}
+
+            <div className="row mt-5">
+                <div className="col-2"></div>
+                <div className="col-8 d-flex justify-content-center">
+                    <button type="button" className="btn btn-success">GET ICAL</button></div>
+
+
+                <div className="col-2"></div>
+
             </div>
-            <button>Get ICS</button>
+
+            <div className="row mt-5">
+                <div className="col-2"></div>
+                <div className="col-8">
+                    <div className="accordion">
+                        {chosen.map((mods,index) => {
+                            return <Accordion title={mods.name} events={mods.events}/>
+                        })}
+                    </div>
+                </div>
+
+                <div className="col-2"></div>
+            </div>
+
         </div>
     );
 /*        <div>

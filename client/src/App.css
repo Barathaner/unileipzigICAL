@@ -3,6 +3,8 @@
   width: 100vw;
   height: 100vh;
   display: flex;
+  overflow: hidden;
+  overflow-y: auto;
   flex-direction: column;
   font-family: "Nunito", sans-serif;
   background-image: linear-gradient(90deg, #410076, #8820dd);
@@ -12,30 +14,10 @@ body {
   margin: 0;
 }
 
+.btn{
 
-
-.accordion {
-  max-width: 600px;
-  margin: 2rem auto;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  background-color: white;
+  color:white;
 }
 
-.accordion-title {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  cursor: pointer;
-  background-color: #21aeca;
-}
-
-.accordion-title:hover {
-  background-color: #3ab4cc;
-}
-
-.accordion-title,
-.accordion-content {
-  padding: 1rem;
-}
-
-.accordion-content {
-  background-color: #39b9d2;
-}

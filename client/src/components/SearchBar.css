@@ -3,7 +3,6 @@
     border-radius: 6px;
     width: 100%;
     background-color: white;
-    margin-top: 105px;
     padding: 15px;
     border-radius: 6px;
     background-color: white;
@@ -14,6 +13,7 @@
 
 
 .search{
+    margin-top: 105px;
     padding: 15px;
     width: 100%;
 }
@@ -45,6 +45,7 @@ input:focus {
     display: flex;
     align-items: center;
     color: black;
+    cursor: pointer;
 }
 
 
