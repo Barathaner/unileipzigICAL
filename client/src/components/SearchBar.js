@@ -12,7 +12,7 @@ function SearchBar({ addMods,placeholder, data }) {
         setWordEntered(searchWord);
         const newFilter = data.filter((value) => {
             console.log(value)
-            return value.toLowerCase().includes(searchWord.toLowerCase());
+            return  Object.keys(value).length > 0 ? value.toLowerCase().includes(searchWord.toLowerCase()) : "";
         });
 
         if (searchWord === "") {
@@ -48,9 +48,9 @@ function SearchBar({ addMods,placeholder, data }) {
                     <div className="dataResult">
                         {filteredData.slice(0, 15).map((value, key) => {
                             return (
-                                <a className="dataItem text-decoration-none overflow-hidden"  target="_blank">
+                                <div key={value} className="dataItem text-decoration-none overflow-hidden"  target="_blank">
                                     <p className="text-decoration-none overflow-hidden" onClick={e => addMods(value)}>{value} </p>
-                                </a>
+                                </div>
                             );
                         })}
                     </div>
