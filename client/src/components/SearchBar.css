@@ -1,5 +1,5 @@
 .searchInputs {
-
+    margin: 0px;
     border-radius: 6px;
     width: 100%;
     background-color: white;
@@ -10,11 +10,12 @@
     overflow: hidden;
     overflow-y: auto;
 }
-
+.searchInputs.row{
+    margin:0px;
+}
 
 .search{
     margin-top: 105px;
-    padding: 15px;
     width: 100%;
 }
 .input {
