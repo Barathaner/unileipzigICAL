@@ -2,7 +2,6 @@ import React, {useState, useEffect} from 'react'
 import "./App.css";
 import SearchBar from "./components/SearchBar";
 import Accordion from './components/Accordion';
-import moduleList from "./data.json";
 function App() {
 
     const [data, setData] = useState([{}])
@@ -23,19 +22,27 @@ function App() {
 
 
 
-        function postdata(){
+        function postdata(nameslol){
 
             fetch('/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(names)
+                body: JSON.stringify(nameslol)
             })
-                .then((response) => response.json())
-                .then((data) => setChosen(data));
+                .then((response) => {
+                    console.log("response", response)
+                    return response.json()
+                })
+                .then((data) => setChosen(data))
+                .catch(err => {
+                    console.log("err" , err);
+                });
         }
+
     function handleaddMods(evt) {
-        setNames(current => [...current, evt]);
-        postdata()
+        console.log("evt", [...names, evt])
+        setNames([...names, evt]);
+        postdata([...names, evt])
     }
 
     return (
@@ -63,9 +70,9 @@ function App() {
                 <div className="col-2"></div>
                 <div className="col-8">
                     <div className="accordion">
-                        {chosen.map((mods,index) => {
-                            return <Accordion title={mods.name} events={mods.events}/>
-                        })}
+                        {chosen !== undefined ? chosen.map((mods,index) => {
+                            return <Accordion key={mods.id} title={mods.name} events={mods.events}/>
+                        }) : null}
                     </div>
                 </div>
 

@@ -13,7 +13,7 @@ const Accordion = ({title, events}) => {
             </div>
             {isActive && <div>
                 {events.map((event,index) => {
-                        return <Events typ={event.evname} start={event.start} end={event.stop} weekday={event.weekday} location={event.location} teacher={event.teacher}/>
+                        return <Events key = {index} typ={event.evname} start={event.start} end={event.stop} weekday={event.weekday} location={event.location} teacher={event.teacher}/>
                 }
 
                 )}
