@@ -11,11 +11,12 @@ function App() {
 
 
     useEffect(() => {
-        fetch("/members").then(
+        fetch("/getall").then(
             res => res.json()
         ).then(
             data => {
-                setData(data.members)
+                console.log(data.modullist);
+                return setData(data.modullist);
             }
         )
     }, [])
@@ -23,16 +24,19 @@ function App() {
 
     function postdata(nameslol) {
 
-        fetch('/add', {
+        fetch('/moduleswithevents', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(nameslol)
+            body: JSON.stringify({"modulnameslist" : nameslol})
         })
             .then((response) => {
-                console.log("response", response)
-                return response.json()
+                console.log("response", response);
+                return response.json();
             })
-            .then((data) => setChosen(data))
+            .then((data) => {
+                console.log(data.moduleswithevents)
+                setChosen(data.moduleswithevents)
+            })
             .catch(err => {
                 console.log("err", err);
             });
@@ -41,20 +45,20 @@ function App() {
     function handleaddMods(evt) {
         console.log("evt", [...names, evt])
         setNames([...names, evt]);
+        data.splice(data.findIndex( obj => obj.name === evt),1)
+        setData(data)
         postdata([...names, evt])
     }
 
 
 
 
-
     function handleClickCAL(){
             fetch('/ics', {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/ics',
-    },
-  })
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({"modulnameslist" : names})
+        })
   .then((response) => response.blob())
   .then((blob) => {
     // Create blob link to download

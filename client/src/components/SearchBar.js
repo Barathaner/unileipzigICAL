@@ -11,8 +11,8 @@ function SearchBar({ addMods,placeholder, data }) {
         const searchWord = event.target.value;
         setWordEntered(searchWord);
         const newFilter = data.filter((value) => {
-            console.log(value)
-            return  Object.keys(value).length > 0 ? value.toLowerCase().includes(searchWord.toLowerCase()) : "";
+            console.log(value.name)
+            return  Object.keys(value.name).length > 0 ? value.name.toLowerCase().includes(searchWord.toLowerCase()) : "";
         });
 
         if (searchWord === "") {
@@ -48,8 +48,8 @@ function SearchBar({ addMods,placeholder, data }) {
                     <div className="dataResult">
                         {filteredData.slice(0, 15).map((value, key) => {
                             return (
-                                <div key={value} className="dataItem text-decoration-none overflow-hidden"  target="_blank">
-                                    <p className="text-decoration-none overflow-hidden" onClick={e => addMods(value)}>{value} </p>
+                                <div key={value.id} className="dataItem text-decoration-none overflow-hidden"  target="_blank">
+                                    <p className="text-decoration-none overflow-hidden" onClick={e => addMods(value.name)}>{value.name} </p>
                                 </div>
                             );
                         })}

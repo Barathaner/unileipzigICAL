@@ -1,7 +1,8 @@
-from flask import (Flask,send_file,request,jsonify)
+from flask import (Flask, send_file, request, jsonify)
 from flask import send_from_directory
 from flask_cors import CORS
 from flask_cors import cross_origin
+from flask_sqlalchemy import SQLAlchemy
 from bs4 import BeautifulSoup
 import requests
 from icalendar import Calendar, Event, vCalAddress, vText
@@ -9,21 +10,22 @@ import pytz
 from datetime import datetime
 import os
 import json
-from pathlib import Path
 from datetime import timedelta, date
+# from flask_crontab import Crontab
+from sqlalchemy_utils.functions import database_exists, json_sql, create_database, drop_database
+
 app = Flask(__name__, static_folder='./client/build', static_url_path='')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:hyh2kB9x@localhost/unikarlender'
+db = SQLAlchemy(app)
 cors = CORS(app)
-
-
-
-
+# crontab = Crontab(app)
 semester1 = 'ws2022'
 semester2 = 'ss2022'
 
 weekdaydict = {
-  "montags": 0,
-  "dienstags": 1,
-  "mittwochs": 2,
+    "montags": 0,
+    "dienstags": 1,
+    "mittwochs": 2,
     "donnerstags": 3,
     "freitags": 4,
     "samstags": 5,
@@ -31,96 +33,176 @@ weekdaydict = {
 }
 
 
+class Modul(db.Model):
+    id = db.Column(db.String, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    modulevents = db.relationship('ModulEvent', backref='modul')
+
+    def __repr__(self):
+        return f"Modul: {self.name}"
+
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+
+
+class ModulEvent(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    start = db.Column(db.String(5))
+    stop = db.Column(db.String(5))
+    weekday = db.Column(db.Integer)
+    location = db.Column(db.String(100))
+    teacher = db.Column(db.String(100))
+    modul_id = db.Column(db.String, db.ForeignKey('modul.id'), nullable=False)
+
+    def __repr__(self):
+        return f"ModulEvent: {self.name}"
+
+    def __init__(self, modul_id, name, start, stop, weekday, location, teacher):
+        self.name = name
+        self.start = start
+        self.stop = stop
+        self.weekday = weekday
+        self.location = location
+        self.teacher = teacher
+        self.modul_id = modul_id
+
+
+class UniEvent:
+    def __init__(self, name, start, stop, weekday, location, teacher):
+        self.name = name
+        self.start = start
+        self.stop = stop
+        self.weekday = weekday
+        self.location = location
+        self.teacher = teacher
+
+
+class Module:
+    def __init__(self, id, name, events):
+        self.id = id
+        self.name = name
+        self.events = events
+
+
+def fillDatabase():
+    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
+    moduleList = scrapeForTimeTable(url)
+    for module in moduleList:
+        db.session.add(Modul(module.id, module.name))
+        db.session.commit()
+        for event in module.events:
+            db.session.add(ModulEvent(module.id, event.name, event.start, event.stop, event.weekday, event.location,
+                                      event.teacher))
+            db.session.commit()
+
 
 def scrapeForTimeTable(url):
     page = requests.get(url)
-    soup = BeautifulSoup(page.content,'html.parser')
-    stundenplan = soup.find('div', attrs={'id':'stundenplan'})
-    rows = stundenplan.find_all('div', attrs={'class':'MODUL'})
-    moduleList=[]
+    soup = BeautifulSoup(page.content, 'html.parser')
+    stundenplan = soup.find('div', attrs={'id': 'stundenplan'})
+    rows = stundenplan.find_all('div', attrs={'class': 'MODUL'})
+    moduleList = []
     for module in rows:
-        name = parseUmlaute(module.find('div', attrs={'class':'n-modul-title'}).text)
-        id = module.find('div', attrs={'class':'n-modul-id'}).text
-        events = module.find_all('div', attrs={'class':'s-termin-entry'})
-        newevents=[]
+        name = parseUmlaute(module.find('div', attrs={'class': 'n-modul-title'}).text)
+        id = module.find('div', attrs={'class': 'n-modul-id'}).text
+        events = module.find_all('div', attrs={'class': 's-termin-entry'})
+        newevents = []
         for ev in events:
-            evname, evstart, evstop, evweekday, evlocation, evteacher = " "*6
-            if ev.find('div',attrs={'class':'s_termin_typ'}) is None:
+            evname, evstart, evstop, evweekday, evlocation, evteacher = " " * 6
+            if ev.find('div', attrs={'class': 's_termin_typ'}) is None:
                 print("No eventname")
             else:
-                evname = parseUmlaute(ev.find('div',attrs={'class':'s_termin_typ'}).text)
-            if ev.find('div',attrs={'class':'s_termin_von'}) is None:
+                evname = parseUmlaute(ev.find('div', attrs={'class': 's_termin_typ'}).text)
+            if ev.find('div', attrs={'class': 's_termin_von'}) is None:
                 print("No start")
             else:
-                evstart = ev.find('div',attrs={'class':'s_termin_von'}).text
-            if ev.find('div',attrs={'class':'s_termin_bis'}) is None:
+                evstart = ev.find('div', attrs={'class': 's_termin_von'}).text
+            if ev.find('div', attrs={'class': 's_termin_bis'}) is None:
                 print("No stop")
             else:
-                evstop = ev.find('div',attrs={'class':'s_termin_bis'}).text
-            if ev.find('div',attrs={'class':'s_termin_zeit'}) is None or len(ev.find('div',attrs={'class':'s_termin_zeit'}).text) < 5:
+                evstop = ev.find('div', attrs={'class': 's_termin_bis'}).text
+            if ev.find('div', attrs={'class': 's_termin_zeit'}) is None or len(
+                    ev.find('div', attrs={'class': 's_termin_zeit'}).text) < 5:
                 print("No day")
             else:
-                evweekday = ev.find('div',attrs={'class':'s_termin_zeit'}).text
-            if ev.find('div',attrs={'class':'s_termin_raum'}) is None:
+                evweekday = ev.find('div', attrs={'class': 's_termin_zeit'}).text
+            if ev.find('div', attrs={'class': 's_termin_raum'}) is None:
                 print("No room")
             else:
-                evlocation = parseUmlaute(ev.find('div',attrs={'class':'s_termin_raum'}).text)
-            if ev.find('div',attrs={'class':'s_termin_dozent'}) is None:
+                evlocation = parseUmlaute(ev.find('div', attrs={'class': 's_termin_raum'}).text)
+            if ev.find('div', attrs={'class': 's_termin_dozent'}) is None:
                 print("No teacher")
             else:
-                evteacher = parseUmlaute(ev.find('div',attrs={'class':'s_termin_dozent'}).text)
-            newevents.append(UniEvent(evname.strip(),evstart,evstop,parseweekday(evweekday.strip()),evlocation.strip(), removelines(evteacher.strip())))
+                evteacher = parseUmlaute(ev.find('div', attrs={'class': 's_termin_dozent'}).text)
+            newevents.append(
+                UniEvent(evname.strip(), evstart, evstop, parseweekday(evweekday.strip()), evlocation.strip(),
+                         removelines(evteacher.strip())))
 
-        moduleList.append(Module(id,name,newevents))
+        moduleList.append(Module(id, name, newevents))
 
     return moduleList
 
-def convertevToJson(ev):
-    evJson= {
-    'evname' : ev.name,
-    'start' : ev.start,
-    'stop' : ev.stop,
-     'weekday' : ev.weekday ,
-     'location' : ev.location,
-      'teacher' : ev.teacher
+
+def formatevent(ev):
+    evJson = {
+        'evname': ev.name,
+        'start': ev.start,
+        'stop': ev.stop,
+        'weekday': ev.weekday,
+        'location': ev.location,
+        'teacher': ev.teacher
     }
     return evJson
 
 
 def ModuleListToJSON(moduleLi):
-    modJson=[]
+    modJson = []
     for mod in moduleLi:
         jsonEvList = []
         for ev in mod.events:
-            jsonEvList.append(convertevToJson(ev))
+            jsonEvList.append(formatevent(ev))
         modDict = {
-        "id" : mod.id,
-        "name" : mod.name,
-        "events" : jsonEvList
+            "id": mod.id,
+            "name": mod.name,
+            "events": jsonEvList
         }
         modJson.append(modDict)
         jsonString = json.dumps(modJson)
     return jsonString
 
 
+def formatDBModullist(moduleLi):
+    modJson = []
+    for mod in moduleLi:
+        modDict = {
+            "id": mod.id,
+            "name": mod.name
+        }
+        modJson.append(modDict)
+    return jsonify({"modullist": modJson})
+
+
 def createICAL(modules):
-
-
     cal = Calendar()
     start = date(2022, 10, 10)
     end = date(2023, 2, 4)
     for mod in modules:
-        for ev in mod.events:
+        for ev in mod['events']:
             for dt in daterange(start, end):
-                if dt.weekday() in [ev.weekday]:  # to print only the weekdates
+                if dt.weekday() in [ev["weekday"]]:  # to print only the weekdates
                     event = Event()
-                    event.add('summary', mod.id + " " +mod.name + " " +ev.name + " bei " + ev.teacher)
-                    event.add('dtstart', datetime(dt.year, dt.month, dt.day, int(ev.start.split(':')[0]),int(ev.start.split(':')[1]), 0, tzinfo=pytz.utc))
-                    event.add('dtend', datetime(dt.year, dt.month, dt.day, int(ev.stop.split(':')[0]),int(ev.stop.split(':')[1]), 0, tzinfo=pytz.utc))
-                    event.add('dtstamp', datetime(dt.year, dt.month, dt.day, int(ev.stop.split(':')[0]),int(ev.stop.split(':')[1]), 0, tzinfo=pytz.utc))
+                    event.add('summary', mod["id"] + " " + mod["name"] + " " + ev["evname"] + " bei " + ev["teacher"])
+                    event.add('dtstart', datetime(dt.year, dt.month, dt.day, int(ev["start"].split(':')[0]),
+                                                  int(ev["start"].split(':')[1]), 0, tzinfo=pytz.utc))
+                    event.add('dtend', datetime(dt.year, dt.month, dt.day, int(ev["stop"].split(':')[0]),
+                                                int(ev["stop"].split(':')[1]), 0, tzinfo=pytz.utc))
+                    event.add('dtstamp', datetime(dt.year, dt.month, dt.day, int(ev["stop"].split(':')[0]),
+                                                  int(ev["stop"].split(':')[1]), 0, tzinfo=pytz.utc))
 
                     # Adding location
-                    event['location'] = vText(ev.location)
+                    event['location'] = vText(ev["location"])
 
                     # Adding events to calendar
                     cal.add_component(event)
@@ -129,12 +211,15 @@ def createICAL(modules):
 
 
 def removelines(value):
-    return value.replace('\n','')
+    return value.replace('\n', '')
 
 
 def parseUmlaute(str):
-    spcial_char_map = {ord('ä'):'ae', ord('ü'):'ue', ord('ö'):'oe', ord('ß'):'ss',ord('Ä'):'Ae', ord('Ü'):'Ue', ord('Ö'):'Oe'}
+    spcial_char_map = {ord('ä'): 'ae', ord('ü'): 'ue', ord('ö'): 'oe', ord('ß'): 'ss', ord('Ä'): 'Ae', ord('Ü'): 'Ue',
+                       ord('Ö'): 'Oe'}
     return str.translate(spcial_char_map)
+
+
 def parseweekday(weekday):
     try:
         a = weekdaydict[weekday]
@@ -144,79 +229,92 @@ def parseweekday(weekday):
         return None
 
 
-class UniEvent:
-  def __init__(self, name,start,stop,weekday,location,teacher):
-    self.name = name
-    self.start = start
-    self.stop = stop
-    self.weekday = weekday
-    self.location = location
-    self.teacher = teacher
-
-
-
-class Module:
-  def __init__(self, id,name,events):
-    self.id = id
-    self.name = name
-    self.events = events
-
-
 def daterange(date1, date2):
-    for n in range(int ((date2 - date1).days)+1):
+    for n in range(int((date2 - date1).days) + 1):
         yield date1 + timedelta(n)
 
 
-#Members API Route
-@app.route("/members",methods=['GET'])
+# @crontab.job(day_of_week="6")
+def updateDatabase():
+    drop_database('postgresql://postgres:hyh2kB9x@localhost/unikarlender')
+    if not database_exists('postgresql://postgres:hyh2kB9x@localhost/unikarlender'):
+        with app.app_context():
+            create_database('postgresql://postgres:hyh2kB9x@localhost/unikarlender')
+            db.create_all()
+            fillDatabase()
+    print("Updated database")
+
+
+@app.route('/')
 @cross_origin()
-def members():
-    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
-    moduleList = scrapeForTimeTable(url)
-    moduleNames = []
-    for m in moduleList:
-        moduleNames.append(m.name)
-    return {"members": moduleNames}
+def serve():
+    return send_from_directory(app.static_folder, 'index.html')
 
 
+@app.route('/getall', methods=['GET'])
+@cross_origin()
+def getall():
+    modules = Modul.query.order_by(Modul.id.asc()).all()
+    return formatDBModullist(modules)
 
-@app.route("/ics",methods=['GET'])
+
+@app.route('/geteventsformod', methods=['POST'])
+@cross_origin()
+def geteventsformod():
+    data = request.json
+    events = ModulEvent.query.filter_by(modul_id=data['id']).all()
+    jsonevents = []
+    for event in events:
+        jsonevents.append(formatevent(event))
+    return jsonify({"Events": jsonevents})
+
+
+@app.route('/moduleswithevents', methods=['POST'])
+@cross_origin()
+def moduleswithevents():
+    data = request.json
+    print(data)
+    modswithevents = []
+    for m in data['modulnameslist']:
+        modu = Modul.query.filter_by(name=m).one()
+        events = ModulEvent.query.filter_by(modul_id=modu.id).all()
+        jsonevents = []
+        for event in events:
+            jsonevents.append(formatevent(event))
+        modDict = {
+            "id": modu.id,
+            "name": modu.name,
+            "events": jsonevents
+        }
+        modswithevents.append(modDict)
+    return jsonify({"moduleswithevents": modswithevents})
+
+
+@app.route("/ics", methods=['POST'])
 @cross_origin()
 def ics():
-    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
-    moduleList = scrapeForTimeTable(url)
-    ics =createICAL(moduleList)
+    data = request.json
+    modswithevents = []
+    for m in data['modulnameslist']:
+        modu = Modul.query.filter_by(name=m).one()
+        events = ModulEvent.query.filter_by(modul_id=modu.id).all()
+        jsonevents = []
+        for event in events:
+            jsonevents.append(formatevent(event))
+        modDict = {
+            "id": modu.id,
+            "name": modu.name,
+            "events": jsonevents
+        }
+        modswithevents.append(modDict)
+    ics = createICAL(modswithevents)
     f = open(os.path.join('./', 'example.ics'), 'wb')
     f.write(ics)
     f.close()
 
     return send_file('./example.ics', as_attachment=True)
 
-@app.route('/add', methods=['POST'])
-@cross_origin()
-def add():
-    data = request.get_json()
-    print(data)
-    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
-    moduleList = scrapeForTimeTable(url)
-    mods=[]
-    for dat in data:
-        for mod in moduleList:
-            if mod.name == dat:
-                mods.append(mod)
-    datatoJson= ModuleListToJSON(mods)
-    print(datatoJson)
-    return datatoJson
-
-@app.route('/')
-@cross_origin()
-def serve():
-    return send_from_directory(app.static_folder,'index.html')
-
-
 
 if __name__ == '__main__':
-    app.run(debug=True)
-
-
-
+    updateDatabase()
+    app.run()
