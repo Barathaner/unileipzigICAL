@@ -6,7 +6,8 @@
     cursor: pointer;
     padding: 15px;
     background-color: white;
-    overflow-x: scroll;
+    overflow: hidden;
+    overflow-x: auto;
 }
 .event{
     padding-right: 15px;
