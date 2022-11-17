@@ -30,3 +30,11 @@ body {
   margin-right: 15px;
 }
 
+.info{
+  justify-content: center;
+  flex-direction: row;
+  color: darkred;
+  border-style: solid;
+  border-radius: 30px;
+}
+
