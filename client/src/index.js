@@ -13,9 +13,9 @@ root.render(
   <React.StrictMode>
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<App />} />
-      <Route path="/impressum" element={<Impressum />} />
-      <Route path="/datenschutz" element={<Datenschutz />} />
+      <Route exact path="/" element={<App />} />
+      <Route exact path="/impressum" element={<Impressum />} />
+      <Route exact path="/datenschutz" element={<Datenschutz />} />
     </Routes>
   </BrowserRouter>
   </React.StrictMode>

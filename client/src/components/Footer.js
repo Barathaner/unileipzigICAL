@@ -1,12 +1,13 @@
 import React, { useState } from "react";
+import { Link} from 'react-router-dom'
 import "./Footer.css";
 
 function Footer() {
 
     return (
   <div className="footer text-center">
-    <a className="mr" href="/impressum">Impressum</a>
-    <a href="/datenschutz">Datenschutz</a>
+    <Link className="mr" to="/impressum">Impressum</Link>
+    <Link to="/datenschutz">Datenschutz</Link>
   </div>
     );
 }
