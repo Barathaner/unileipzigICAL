@@ -22,6 +22,27 @@ function SearchBar({ addMods,placeholder, data }) {
         }
     };
 
+
+        const update = (wordEntered) => {
+        const newFilter = data.filter((value) => {
+            console.log(value.name)
+            return  Object.keys(value.name).length > 0 ? value.name.toLowerCase().includes(wordEntered.toLowerCase()) : "";
+        });
+
+        if (wordEntered === "") {
+            setFilteredData([]);
+        } else {
+            setFilteredData(newFilter);
+        }
+    };
+
+    function handleaddmods(name){
+        update(wordEntered)
+        const newfiltereddata = filteredData.filter(namemod => namemod.name !== name)
+        setFilteredData(newfiltereddata)
+        addMods(name)
+    }
+
     const clearInput = () => {
         setFilteredData([]);
         setWordEntered("");
@@ -49,7 +70,7 @@ function SearchBar({ addMods,placeholder, data }) {
                         {filteredData.slice(0, 15).map((value, key) => {
                             return (
                                 <div key={value.id} className="dataItem text-decoration-none overflow-hidden"  target="_blank">
-                                    <p className="text-decoration-none overflow-hidden" onClick={e => addMods(value.name)}>{value.name} </p>
+                                    <p className="text-decoration-none overflow-hidden" onClick={e => handleaddmods(value.name)}>{value.name} </p>
                                 </div>
                             );
                         })}

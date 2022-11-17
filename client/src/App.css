@@ -21,3 +21,12 @@ body {
   color:white;
 }
 
+.paypalcolor{
+  background-color: rgba(0,48,135,255)!important;
+    border-color: rgba(0,48,135,255)!important;
+}
+
+.mr{
+  margin-right: 15px;
+}
+

@@ -4,18 +4,19 @@ from flask_cors import CORS
 from flask_cors import cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from bs4 import BeautifulSoup
+import re
 import requests
 from icalendar import Calendar, Event, vCalAddress, vText
 import pytz
 from datetime import datetime
 import os
 import json
-from datetime import timedelta, date
+from datetime import timedelta, date,datetime
 # from flask_crontab import Crontab
 from sqlalchemy_utils.functions import database_exists, json_sql, create_database, drop_database
 
 app = Flask(__name__, static_folder='./client/build', static_url_path='')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:hyh2kB9x@localhost/unikarlender'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:s8Cdn6jWW69kfpXFbiJY@localhost/unikarlender'
 db = SQLAlchemy(app)
 cors = CORS(app)
 # crontab = Crontab(app)
@@ -44,6 +45,22 @@ class Modul(db.Model):
     def __init__(self, id, name):
         self.id = id
         self.name = name
+
+
+class Holiday(db.Model):
+    name = db.Column(db.String, primary_key=True)
+    start = db.Column(db.DateTime, nullable=False)
+    end = db.Column(db.DateTime, nullable=False)
+    desc = db.Column(db.String(200), nullable=False)
+
+    def __repr__(self):
+        return f"Holiday: {self.name}"
+
+    def __init__(self, name,start,end, desc):
+        self.name = name
+        self.start = start
+        self.end = end
+        self.desc = desc
 
 
 class ModulEvent(db.Model):
@@ -86,9 +103,19 @@ class Module:
         self.events = events
 
 
+class Holidayuni:
+    def __init__(self, name, start, end, desc):
+        self.name = name
+        self.start = start
+        self.end = end
+        self.desc = desc
+
+
 def fillDatabase():
     url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
+    url2 = f'https://www.uni-leipzig.de/studium/im-studium/akademisches-jahr'
     moduleList = scrapeForTimeTable(url)
+    holidaylist = scrapeHolidays(url2)
     for module in moduleList:
         db.session.add(Modul(module.id, module.name))
         db.session.commit()
@@ -96,6 +123,58 @@ def fillDatabase():
             db.session.add(ModulEvent(module.id, event.name, event.start, event.stop, event.weekday, event.location,
                                       event.teacher))
             db.session.commit()
+
+    for holiday in holidaylist:
+        db.session.add(Holiday(holiday.name,holiday.start,holiday.end, holiday.desc))
+        db.session.commit()
+
+
+def scrapeHolidays(url):
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    accordion = soup.find('div', attrs={'id': 'accordion3663'})
+    rows = accordion.find('div', attrs={'class': 'panel panel-default'})
+    list = rows.find('ul', attrs={'class': 'list-events'})
+    liholidays = list.find_all('li')
+    holidaylist = []
+    for holiday in liholidays:
+        attrs = holiday.find_all()
+        name = attrs[0].text
+        if name is None:
+            print("No name for holiday")
+        else:
+            name = parseUmlaute(name)
+        beschreibung = holiday.text
+        if beschreibung is None:
+            print("No desc for holiday")
+        else:
+            dates = beschreibung.split("–")
+
+            if len(dates)>1:
+                start = dateextraction(dates[0])
+                start = datetime.strptime(start, "%d.%m.%Y")
+                end= dateextraction(dates[1])
+                enddate= datetime.strptime(end, "%d.%m.%Y")
+            else:
+                start=dateextraction(dates[0])
+                start = datetime.strptime(start, "%d.%m.%Y")
+                end=dateextraction(dates[0])
+                enddate= datetime.strptime(end, "%d.%m.%Y")
+
+            desc = beschreibung.split(end)
+            description= desc[1]
+            if len(description)>0:
+                description = description.split(")")[1].strip()
+
+
+        holidaylist.append(Holidayuni(name, start,enddate,description))
+
+    return holidaylist
+
+
+def dateextraction(input):
+    match = re.search(r'(\d+.\d+.\d+)', input)
+    return match.group(1)
 
 
 def scrapeForTimeTable(url):
@@ -186,20 +265,43 @@ def formatDBModullist(moduleLi):
 
 def createICAL(modules):
     cal = Calendar()
-    start = date(2022, 10, 10)
-    end = date(2023, 2, 4)
+    start = Holiday.query.filter_by(name="Lehrveranstaltungen (15 Wochen)").one().start
+    end = Holiday.query.filter_by(name="Lehrveranstaltungen (15 Wochen)").one().end
+    allHolidays =Holiday.query.all()
+    freeholidays = Holiday.query.filter_by(desc='vorlesungsfrei').all()
+    nouni = []
+    for dates in freeholidays:
+        for dt in daterange(dates.start,dates.end):
+            nouni.append(dt)
+
+    for holidayinfo in allHolidays:
+        event1 = Event()
+        event1.add('summary',holidayinfo.name + " " +holidayinfo.desc)
+        event1.add('dtstart', holidayinfo.start.date())
+        event1.add('dtend', holidayinfo.start.date())
+        event1.add('dtstamp', holidayinfo.start.date())
+        cal.add_component(event1)
+
+        event = Event()
+        event.add('summary',holidayinfo.name + " " +holidayinfo.desc)
+        event.add('dtstart', holidayinfo.end.date())
+        event.add('dtend', holidayinfo.end.date())
+        event.add('dtstamp', holidayinfo.end.date())
+        # Adding events to calendar
+        cal.add_component(event)
+
     for mod in modules:
         for ev in mod['events']:
             for dt in daterange(start, end):
-                if dt.weekday() in [ev["weekday"]]:  # to print only the weekdates
+                if dt.weekday() in [ev["weekday"]] and dt not in nouni:  # to print only the weekdates
                     event = Event()
                     event.add('summary', mod["id"] + " " + mod["name"] + " " + ev["evname"] + " bei " + ev["teacher"])
                     event.add('dtstart', datetime(dt.year, dt.month, dt.day, int(ev["start"].split(':')[0]),
-                                                  int(ev["start"].split(':')[1]), 0, tzinfo=pytz.utc))
+                                                  int(ev["start"].split(':')[1]), 0, tzinfo=pytz.timezone('Europe/Berlin')))
                     event.add('dtend', datetime(dt.year, dt.month, dt.day, int(ev["stop"].split(':')[0]),
-                                                int(ev["stop"].split(':')[1]), 0, tzinfo=pytz.utc))
+                                                int(ev["stop"].split(':')[1]), 0, tzinfo=pytz.timezone('Europe/Berlin')))
                     event.add('dtstamp', datetime(dt.year, dt.month, dt.day, int(ev["stop"].split(':')[0]),
-                                                  int(ev["stop"].split(':')[1]), 0, tzinfo=pytz.utc))
+                                                  int(ev["stop"].split(':')[1]), 0, tzinfo=pytz.timezone('Europe/Berlin')))
 
                     # Adding location
                     event['location'] = vText(ev["location"])
@@ -236,12 +338,13 @@ def daterange(date1, date2):
 
 # @crontab.job(day_of_week="6")
 def updateDatabase():
-    drop_database('postgresql://postgres:hyh2kB9x@localhost/unikarlender')
-    if not database_exists('postgresql://postgres:hyh2kB9x@localhost/unikarlender'):
+    drop_database('postgresql://postgres:s8Cdn6jWW69kfpXFbiJY@localhost/unikarlender')
+    if not database_exists('postgresql://postgres:s8Cdn6jWW69kfpXFbiJY@localhost/unikarlender'):
         with app.app_context():
-            create_database('postgresql://postgres:hyh2kB9x@localhost/unikarlender')
+            create_database('postgresql://postgres:s8Cdn6jWW69kfpXFbiJY@localhost/unikarlender')
             db.create_all()
             fillDatabase()
+            #a=createICAL(['Modellierung biologischer und molekularer Systeme', 'Grundlagen der Biometrie'])
     print("Updated database")
 
 
@@ -296,6 +399,7 @@ def ics():
     data = request.json
     modswithevents = []
     for m in data['modulnameslist']:
+        print(m)
         modu = Modul.query.filter_by(name=m).one()
         events = ModulEvent.query.filter_by(modul_id=modu.id).all()
         jsonevents = []
@@ -308,11 +412,11 @@ def ics():
         }
         modswithevents.append(modDict)
     ics = createICAL(modswithevents)
-    f = open(os.path.join('./', 'example.ics'), 'wb')
+    f = open("calendar.ics", 'wb')
     f.write(ics)
     f.close()
 
-    return send_file('./example.ics', as_attachment=True)
+    return send_file("calendar.ics", as_attachment=True)
 
 
 if __name__ == '__main__':
