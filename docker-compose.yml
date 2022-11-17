@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
+    volumes:
+      - .postgres-data:/var/lib/postgresql/new/data
+    container_name: flask_postgres
+
+  react-flask-app:
+    build: .
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
+    links:
+      - postgres
+    depends_on:
+      - postgres
+    container_name: react-flask-app
+    image: react-flask-app
+    ports:
+      - "3000:3000"

@@ -6,17 +6,21 @@ from flask_sqlalchemy import SQLAlchemy
 from bs4 import BeautifulSoup
 import re
 import requests
-from icalendar import Calendar, Event, vCalAddress, vText
+from icalendar import Calendar, Event, vText
 import pytz
-from datetime import datetime
-import os
 import json
-from datetime import timedelta, date,datetime
+import os
+from datetime import timedelta, datetime
 # from flask_crontab import Crontab
-from sqlalchemy_utils.functions import database_exists, json_sql, create_database, drop_database
+from sqlalchemy_utils.functions import database_exists, create_database, drop_database
+import time
 
-app = Flask(__name__, static_folder='./client/build', static_url_path='')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:s8Cdn6jWW69kfpXFbiJY@localhost/unikarlender'
+time.sleep(10)
+
+app = Flask(__name__, static_folder='../build', static_url_path='')
+app.config["SECRET_KEY"] = "pogchampsecret"
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 cors = CORS(app)
 # crontab = Crontab(app)
@@ -84,6 +88,7 @@ class ModulEvent(db.Model):
         self.location = location
         self.teacher = teacher
         self.modul_id = modul_id
+
 
 
 class UniEvent:
@@ -338,21 +343,20 @@ def daterange(date1, date2):
 
 # @crontab.job(day_of_week="6")
 def updateDatabase():
-    drop_database('postgresql://postgres:s8Cdn6jWW69kfpXFbiJY@localhost/unikarlender')
-    if not database_exists('postgresql://postgres:s8Cdn6jWW69kfpXFbiJY@localhost/unikarlender'):
+    drop_database(f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}")
+    if not database_exists(f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}"):
         with app.app_context():
-            create_database('postgresql://postgres:s8Cdn6jWW69kfpXFbiJY@localhost/unikarlender')
+            create_database(f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}")
             db.create_all()
             fillDatabase()
-            #a=createICAL(['Modellierung biologischer und molekularer Systeme', 'Grundlagen der Biometrie'])
     print("Updated database")
+
 
 
 @app.route('/')
 @cross_origin()
 def serve():
     return send_from_directory(app.static_folder, 'index.html')
-
 
 @app.route('/getall', methods=['GET'])
 @cross_origin()
@@ -419,6 +423,11 @@ def ics():
     return send_file("calendar.ics", as_attachment=True)
 
 
+
+
+with app.app_context():
+    db.create_all()
+    fillDatabase()
+
 if __name__ == '__main__':
-    updateDatabase()
-    app.run()
+    app.run(debug=False)
