@@ -19,7 +19,8 @@ RUN mkdir ./api
 COPY ./backend/ ./api/
 WORKDIR /app/api
 RUN pip3 install -r requirements.txt
-
+ENV FLASK_ENV production
+ENV FLASK_DEBUG 0
 
 EXPOSE 3000
 CMD ["gunicorn", "-b", ":3000", "server:app"]

@@ -11,7 +11,7 @@ import pytz
 import json
 import os
 from datetime import timedelta, datetime
-# from flask_crontab import Crontab
+from flask_crontab import Crontab
 from sqlalchemy_utils.functions import database_exists, create_database, drop_database
 import time
 
@@ -23,7 +23,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://postgres:{os.environ['POS
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 cors = CORS(app)
-# crontab = Crontab(app)
+crontab = Crontab(app)
 semester1 = 'ws2022'
 semester2 = 'ss2022'
 
@@ -341,15 +341,17 @@ def daterange(date1, date2):
         yield date1 + timedelta(n)
 
 
-# @crontab.job(day_of_week="6")
+@crontab.job(day_of_week="6")
 def updateDatabase():
-    drop_database(f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}")
-    if not database_exists(f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}"):
-        with app.app_context():
-            create_database(f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}")
+    with app.app_context():
+        if not database_exists(f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}"):
             db.create_all()
             fillDatabase()
-    print("Updated database")
+        else:
+            db.drop_all()
+            db.create_all()
+            fillDatabase()
+        print("Updated database")
 
 
 
@@ -422,12 +424,4 @@ def ics():
 
     return send_file("calendar.ics", as_attachment=True)
 
-
-
-
-with app.app_context():
-    db.create_all()
-    fillDatabase()
-
-if __name__ == '__main__':
-    app.run(debug=False)
+updateDatabase()
