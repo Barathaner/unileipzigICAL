@@ -1,7 +1,6 @@
 .footer{
   margin-top: 1rem;
   padding: 1rem;
-  background-image: linear-gradient(90deg, #000000, #413a42);
   position: fixed;
   flex: auto;
   bottom: 0;
