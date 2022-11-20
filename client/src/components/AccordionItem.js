@@ -10,20 +10,16 @@ const AccordionItem = ({deleteMods, modul}) => {
         deleteMods(id)
     }
     return<div key={modul.id}>
-            <div className="accordion-item">
-                <div className="accordion-title">
-                    <div>{modul.name}</div>
-                    <div className="d-flex">
-
-                        <div onClick={() => setIsActive(!isActive)}>{isActive ?
-                            <button type="button" className="btn btn-secondary">Less</button> :
-                            <button type="button" className="btn btn-success">More</button>}</div>
+            <div className="eventitem d-sm-flex ">
+                    <div className=" eventtitle row">{modul.name}</div>
+                <div className="eventbuttons row">
+                    {isActive ?
+                            <button onClick={() => setIsActive(!isActive)} type="button" className="btn btn-secondary">Less</button> :
+                            <button onClick={() => setIsActive(!isActive)} type="button" className="btn btn-success">More</button>}
 
                         <button type="button" onClick={e => handledeletemods(modul.id)}
                                 className="btn btn-danger">Delete
                         </button>
-
-                    </div>
                 </div>
                 {isActive && <div>
                     {modul.events.map((event, index) => {

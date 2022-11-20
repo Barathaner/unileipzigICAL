@@ -24,3 +24,5 @@ client/yarn-error.log*
 .idea
 venv
 
+backend/serverdebug.py
+

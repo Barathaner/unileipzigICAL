@@ -4,8 +4,13 @@ import AccordionItem from "./AccordionItem";
 const Accordion = ({deleteMods, chosen}) => {
 
 
-    return (chosen.map(modul => {
+    return (<div className="accordion">{
+
+        chosen.map(modul => {
         return <AccordionItem deleteMods={deleteMods} modul={modul}></AccordionItem>
-    }))
+    })
+    }
+
+    </div>)
 };
 export default Accordion;

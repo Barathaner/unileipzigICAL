@@ -6,28 +6,3 @@
     overflow: hidden;
     overflow-y: auto;
 }
-
-.accordion-title {
-    justify-content: space-between;
-    cursor: pointer;
-    background-color: white;
-    display: flex;
-    flex-direction: row;
-}
-
-.accordion-title:hover {
-    background-color: white;
-}
-
-.accordion-title,
-.accordion-content {
-
-    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-    font-size: 18px;
-    padding: 15px;
-}
-
-.accordion-content {
-    justify-content: center;
-    background-color: white;
-}
