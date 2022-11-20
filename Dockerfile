@@ -23,4 +23,4 @@ ENV FLASK_ENV production
 ENV FLASK_DEBUG 0
 
 EXPOSE 3000
-CMD ["gunicorn", "-b", ":3000", "server:app"]
+CMD ["gunicorn", "-c", "python:config.gunicorn", "server:app"]
