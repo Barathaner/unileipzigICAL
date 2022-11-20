@@ -12,6 +12,7 @@ const AccordionItem = ({deleteMods, modul}) => {
     return<div key={modul.id}>
             <div className="eventitem d-sm-flex ">
                     <div className=" eventtitle row">{modul.name}</div>
+
                 <div className="eventbuttons row">
                     {isActive ?
                             <button onClick={() => setIsActive(!isActive)} type="button" className="btn btn-secondary">Less</button> :
@@ -21,6 +22,8 @@ const AccordionItem = ({deleteMods, modul}) => {
                                 className="btn btn-danger">Delete
                         </button>
                 </div>
+            </div>
+
                 {isActive && <div>
                     {modul.events.map((event, index) => {
                             return <Events key={index} typ={event.evname} start={event.start} end={event.stop}
@@ -28,7 +31,6 @@ const AccordionItem = ({deleteMods, modul}) => {
                         }
                     )}
                 </div>}
-            </div>
 
         </div>
 };
