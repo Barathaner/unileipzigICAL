@@ -22,6 +22,8 @@ services:
       PRIVKEY: ${PRIVKEY}
       CERT: ${CERT}
       CHAIN: ${CHAIN}
+    volumes:
+      - /etc/letsencrypt/live/unikarlender.de:/etc/letsencrypt/live/unikarlender.de
     links:
       - postgres
     depends_on:
