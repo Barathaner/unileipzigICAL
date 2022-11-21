@@ -21,7 +21,8 @@ services:
       WEB_BIND: ${WEB_BIND}
       PRIVKEY: ${PRIVKEY}
       CERT: ${CERT}
-      CHAIN: ${CHAIN}
+      CHAIN: ${CHAIN}    volumes:
+      - /etc/letsencrypt/live/unikarlender.de:/etc/letsencrypt/live/unikarlender.de
     links:
       - postgres
     depends_on:
@@ -29,4 +30,4 @@ services:
     container_name: react-flask-app
     image: react-flask-app
     ports:
-      - "443:3000"
+      - "80:3000"

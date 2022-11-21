@@ -17,6 +17,8 @@ WORKDIR /app
 COPY --from=build-step /app/build ./build
 RUN mkdir ./api
 COPY ./backend/ ./api/
+WORKDIR /app
+COPY ./unikarlendercerts/ ./unikarlendercerts/
 WORKDIR /app/api
 RUN pip3 install -r requirements.txt
 ENV FLASK_ENV production
