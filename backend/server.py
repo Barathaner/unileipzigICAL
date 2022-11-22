@@ -374,13 +374,10 @@ def daterange(date1, date2):
 
 @crontab.job(day_of_week="6")
 def updateDatabase():
+    time.sleep(5)
     with app.app_context():
         if not database_exists(
                 f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}"):
-            db.create_all()
-            fillDatabase()
-        else:
-            db.drop_all()
             db.create_all()
             fillDatabase()
         print("Updated database")
