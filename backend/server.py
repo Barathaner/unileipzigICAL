@@ -286,27 +286,27 @@ def createICAL(modules):
 
     for holidayinfo in allHolidays:
         event1 = Event()
-        event1.add('dtstamp', 'dtstamp',
+        event1.add('dtstamp',
                    datetime(datetime.now().year, datetime.now().month, datetime.now().day, datetime.now().hour,
                             datetime.now().minute, datetime.now().second, 0, tzinfo=pytz.timezone('Europe/Berlin')))
-        event1.add('dtstart', datetime.date(holidayinfo.start.date(), tzinfo=pytz.timezone('Europe/Berlin')))
-        event1.add('dtend', datetime.date(holidayinfo.start.date(), tzinfo=pytz.timezone('Europe/Berlin')))
+        event1.add('dtstart', holidayinfo.start.date())
+        event1.add('dtend', holidayinfo.start.date())
         event1.add('summary', holidayinfo.name + " " + holidayinfo.desc)
         event1.add('sequence', 0)
-        event1.add('description',holidayinfo.name + " " + holidayinfo.desc)
-        event1.add('uid',event1['dtstamp'] + "_" + event1['dtstart']+ "_" +event1['summary'] )
+        event1.add('description',vText(holidayinfo.name + " " + holidayinfo.desc))
+        event1.add('uid',vText("_" + holidayinfo.name+ "_" +holidayinfo.desc ))
         cal.add_component(event1)
 
         event = Event()
-        event.add('dtstamp', 'dtstamp',
+        event.add('dtstamp',
                   datetime(datetime.now().year, datetime.now().month, datetime.now().day, datetime.now().hour,
                            datetime.now().minute, datetime.now().second, 0, tzinfo=pytz.timezone('Europe/Berlin')))
-        event.add('dtstart', datetime.date(holidayinfo.end.date(), tzinfo=pytz.timezone('Europe/Berlin')))
-        event.add('dtend', datetime.date(holidayinfo.end.date(), tzinfo=pytz.timezone('Europe/Berlin')))
+        event.add('dtstart', holidayinfo.end.date())
+        event.add('dtend', holidayinfo.end.date())
         event.add('summary', holidayinfo.name + " " + holidayinfo.desc)
         event.add('sequence',0)
-        event.add('description',holidayinfo.name + " " + holidayinfo.desc)
-        event.add('uid',event['dtstamp'] + "_" +event['summary'] + event['dtend'])
+        event.add('description',vText(holidayinfo.name + " " + holidayinfo.desc))
+        event.add('uid',vText( "_" +holidayinfo.name + holidayinfo.desc))
         # Adding events to calendar
         cal.add_component(event)
 
@@ -328,8 +328,8 @@ def createICAL(modules):
                     event.add('summary', mod["id"] + " " + mod["name"] + " " + ev["evname"])
                     event['location'] = vText(ev["location"])
                     event.add('sequence', 0)
-                    event.add('description'," bei " + ev["teacher"])
-                    event.add('uid',event['dtstamp'] + "_" +event['summary'] + event['dtstart'] + event['location'])
+                    event.add('description',vText(" bei " + ev["teacher"]))
+                    event.add('uid',vText(ev["location"] + "_" +mod["name"] + mod["id"]))
 
                     # Adding events to calendar
                     cal.add_component(event)
