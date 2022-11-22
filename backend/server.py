@@ -15,6 +15,10 @@ from flask_crontab import Crontab
 from sqlalchemy_utils.functions import database_exists, create_database, drop_database
 import time
 
+import string
+import random
+N = 7
+
 time.sleep(10)
 
 app = Flask(__name__, static_folder='../build', static_url_path='')
@@ -294,7 +298,9 @@ def createICAL(modules):
         event1.add('summary', holidayinfo.name + " " + holidayinfo.desc)
         event1.add('sequence', 0)
         event1.add('description',vText(holidayinfo.name + " " + holidayinfo.desc))
-        event1.add('uid',vText("_" + holidayinfo.name+ "_" +holidayinfo.desc ))
+        res = ''.join(random.choices(string.ascii_uppercase +
+                                     string.digits, k=N))
+        event1.add('uid',vText("_" + holidayinfo.name+ "_" +holidayinfo.desc +res))
         cal.add_component(event1)
 
         event = Event()
@@ -306,7 +312,9 @@ def createICAL(modules):
         event.add('summary', holidayinfo.name + " " + holidayinfo.desc)
         event.add('sequence',0)
         event.add('description',vText(holidayinfo.name + " " + holidayinfo.desc))
-        event.add('uid',vText( "_" +holidayinfo.name + holidayinfo.desc))
+        res = ''.join(random.choices(string.ascii_uppercase +
+                                     string.digits, k=N))
+        event.add('uid',vText( "_" +holidayinfo.name + holidayinfo.desc)+ res)
         # Adding events to calendar
         cal.add_component(event)
 
@@ -329,7 +337,9 @@ def createICAL(modules):
                     event['location'] = vText(ev["location"])
                     event.add('sequence', 0)
                     event.add('description',vText(" bei " + ev["teacher"]))
-                    event.add('uid',vText(ev["location"] + "_" +mod["name"] + mod["id"]))
+                    res = ''.join(random.choices(string.ascii_uppercase +
+                                                 string.digits, k=N))
+                    event.add('uid',vText(ev["location"] + "_" +mod["name"] + mod["id"]+ res))
 
                     # Adding events to calendar
                     cal.add_component(event)
