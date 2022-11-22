@@ -19,7 +19,8 @@ time.sleep(10)
 
 app = Flask(__name__, static_folder='../build', static_url_path='')
 app.config["SECRET_KEY"] = "pogchampsecret"
-app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}"
+app.config[
+    'SQLALCHEMY_DATABASE_URI'] = f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 cors = CORS(app)
@@ -60,7 +61,7 @@ class Holiday(db.Model):
     def __repr__(self):
         return f"Holiday: {self.name}"
 
-    def __init__(self, name,start,end, desc):
+    def __init__(self, name, start, end, desc):
         self.name = name
         self.start = start
         self.end = end
@@ -88,7 +89,6 @@ class ModulEvent(db.Model):
         self.location = location
         self.teacher = teacher
         self.modul_id = modul_id
-
 
 
 class UniEvent:
@@ -130,7 +130,7 @@ def fillDatabase():
             db.session.commit()
 
     for holiday in holidaylist:
-        db.session.add(Holiday(holiday.name,holiday.start,holiday.end, holiday.desc))
+        db.session.add(Holiday(holiday.name, holiday.start, holiday.end, holiday.desc))
         db.session.commit()
 
 
@@ -155,24 +155,23 @@ def scrapeHolidays(url):
         else:
             dates = beschreibung.split("–")
 
-            if len(dates)>1:
+            if len(dates) > 1:
                 start = dateextraction(dates[0])
                 start = datetime.strptime(start, "%d.%m.%Y")
-                end= dateextraction(dates[1])
-                enddate= datetime.strptime(end, "%d.%m.%Y")
+                end = dateextraction(dates[1])
+                enddate = datetime.strptime(end, "%d.%m.%Y")
             else:
-                start=dateextraction(dates[0])
+                start = dateextraction(dates[0])
                 start = datetime.strptime(start, "%d.%m.%Y")
-                end=dateextraction(dates[0])
-                enddate= datetime.strptime(end, "%d.%m.%Y")
+                end = dateextraction(dates[0])
+                enddate = datetime.strptime(end, "%d.%m.%Y")
 
             desc = beschreibung.split(end)
-            description= desc[1]
-            if len(description)>0:
+            description = desc[1]
+            if len(description) > 0:
                 description = description.split(")")[1].strip()
 
-
-        holidaylist.append(Holidayuni(name, start,enddate,description))
+        holidaylist.append(Holidayuni(name, start, enddate, description))
 
     return holidaylist
 
@@ -270,30 +269,44 @@ def formatDBModullist(moduleLi):
 
 def createICAL(modules):
     cal = Calendar()
-    cal.add('prodid', '-//Karl-Augustin Jahnel IT//unikarlender.de//DE')
+    cal.add('x-wr-caldesc', 'unileipzigkarlendar')
+    cal.add('x-wr-calname', 'unileipzigkarlendar')
+    cal.add('x-wr-timezone', 'Europe/Berlin')
+    cal.add('calscale', 'GREGORIAN')
+    cal.add('prodid', '-//Karl-Augustin-Jahnel IT//unikarlender.de//DE')
     cal.add('version', '2.0')
     start = Holiday.query.filter_by(name="Lehrveranstaltungen (15 Wochen)").one().start
     end = Holiday.query.filter_by(name="Lehrveranstaltungen (15 Wochen)").one().end
-    allHolidays =Holiday.query.all()
+    allHolidays = Holiday.query.all()
     freeholidays = Holiday.query.filter_by(desc='vorlesungsfrei').all()
     nouni = []
     for dates in freeholidays:
-        for dt in daterange(dates.start,dates.end):
+        for dt in daterange(dates.start, dates.end):
             nouni.append(dt)
 
     for holidayinfo in allHolidays:
         event1 = Event()
-        event1.add('summary',holidayinfo.name + " " +holidayinfo.desc)
-        event1.add('dtstart', holidayinfo.start.date())
-        event1.add('dtend', holidayinfo.start.date())
-        event1.add('dtstamp', holidayinfo.start.date())
+        event1.add('dtstamp', 'dtstamp',
+                   datetime(datetime.now().year, datetime.now().month, datetime.now().day, datetime.now().hour,
+                            datetime.now().minute, datetime.now().second, 0, tzinfo=pytz.timezone('Europe/Berlin')))
+        event1.add('dtstart', datetime.date(holidayinfo.start.date(), tzinfo=pytz.timezone('Europe/Berlin')))
+        event1.add('dtend', datetime.date(holidayinfo.start.date(), tzinfo=pytz.timezone('Europe/Berlin')))
+        event1.add('summary', holidayinfo.name + " " + holidayinfo.desc)
+        event1.add('sequence', 0)
+        event1.add('description',holidayinfo.name + " " + holidayinfo.desc)
+        event1.add('uid',event1['dtstamp'] + "_" + event1['dtstart']+ "_" +event1['summary'] )
         cal.add_component(event1)
 
         event = Event()
-        event.add('summary',holidayinfo.name + " " +holidayinfo.desc)
-        event.add('dtstart', holidayinfo.end.date())
-        event.add('dtend', holidayinfo.end.date())
-        event.add('dtstamp', holidayinfo.end.date())
+        event.add('dtstamp', 'dtstamp',
+                  datetime(datetime.now().year, datetime.now().month, datetime.now().day, datetime.now().hour,
+                           datetime.now().minute, datetime.now().second, 0, tzinfo=pytz.timezone('Europe/Berlin')))
+        event.add('dtstart', datetime.date(holidayinfo.end.date(), tzinfo=pytz.timezone('Europe/Berlin')))
+        event.add('dtend', datetime.date(holidayinfo.end.date(), tzinfo=pytz.timezone('Europe/Berlin')))
+        event.add('summary', holidayinfo.name + " " + holidayinfo.desc)
+        event.add('sequence',0)
+        event.add('description',holidayinfo.name + " " + holidayinfo.desc)
+        event.add('uid',event['dtstamp'] + "_" +event['summary'] + event['dtend'])
         # Adding events to calendar
         cal.add_component(event)
 
@@ -302,16 +315,21 @@ def createICAL(modules):
             for dt in daterange(start, end):
                 if dt.weekday() in [ev["weekday"]] and dt not in nouni:  # to print only the weekdates
                     event = Event()
-                    event.add('summary', mod["id"] + " " + mod["name"] + " " + ev["evname"] + " bei " + ev["teacher"])
+                    event.add('dtstamp', datetime(datetime.now().year, datetime.now().month, datetime.now().day,
+                                                  datetime.now().hour, datetime.now().minute, datetime.now().second, 0,
+                                                  tzinfo=pytz.timezone('Europe/Berlin')))
                     event.add('dtstart', datetime(dt.year, dt.month, dt.day, int(ev["start"].split(':')[0]),
-                                                  int(ev["start"].split(':')[1]), 0, tzinfo=pytz.timezone('Europe/Berlin')))
+                                                  int(ev["start"].split(':')[1]), 0,
+                                                  tzinfo=pytz.timezone('Europe/Berlin')))
                     event.add('dtend', datetime(dt.year, dt.month, dt.day, int(ev["stop"].split(':')[0]),
-                                                int(ev["stop"].split(':')[1]), 0, tzinfo=pytz.timezone('Europe/Berlin')))
-                    event.add('dtstamp', datetime(dt.year, dt.month, dt.day, int(ev["stop"].split(':')[0]),
-                                                  int(ev["stop"].split(':')[1]), 0, tzinfo=pytz.timezone('Europe/Berlin')))
+                                                int(ev["stop"].split(':')[1]), 0,
+                                                tzinfo=pytz.timezone('Europe/Berlin')))
 
-                    # Adding location
+                    event.add('summary', mod["id"] + " " + mod["name"] + " " + ev["evname"])
                     event['location'] = vText(ev["location"])
+                    event.add('sequence', 0)
+                    event.add('description'," bei " + ev["teacher"])
+                    event.add('uid',event['dtstamp'] + "_" +event['summary'] + event['dtstart'] + event['location'])
 
                     # Adding events to calendar
                     cal.add_component(event)
@@ -346,7 +364,8 @@ def daterange(date1, date2):
 @crontab.job(day_of_week="6")
 def updateDatabase():
     with app.app_context():
-        if not database_exists(f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}"):
+        if not database_exists(
+                f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}"):
             db.create_all()
             fillDatabase()
         else:
@@ -356,11 +375,11 @@ def updateDatabase():
         print("Updated database")
 
 
-
 @app.route('/')
 @cross_origin()
 def serve():
     return send_from_directory(app.static_folder, 'index.html')
+
 
 @app.route('/getall', methods=['GET'])
 @cross_origin()
@@ -425,5 +444,6 @@ def ics():
     f.close()
 
     return send_file("calendar.ics", as_attachment=True)
+
 
 updateDatabase()
