@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import './AccordionItem.css'
 import Events from "./Events";
+import 'material-icons';
 
 const AccordionItem = ({deleteMods, modul}) => {
 
@@ -9,29 +10,31 @@ const AccordionItem = ({deleteMods, modul}) => {
     function handledeletemods(id) {
         deleteMods(id)
     }
-    return<div key={modul.id}>
-            <div className="eventitem d-sm-flex ">
-                    <div className=" eventtitle row">{modul.name}</div>
 
-                <div className="eventbuttons row">
-                    {isActive ?
-                            <button onClick={() => setIsActive(!isActive)} type="button" className="btn btn-secondary">Less</button> :
-                            <button onClick={() => setIsActive(!isActive)} type="button" className="btn btn-success">More</button>}
-
+    return<div className='eventitemContainer' key={modul.id}>
+            <div className="eventitem">
+                <div onClick={() => setIsActive(!isActive)} className='eventtitleContainer'>
+                    <span className='material-icons me-2'>expand_more</span>
+                    <div className="eventtitle">{modul.name}</div>
+                </div>
+                <div className="eventbuttons">
                         <button type="button" onClick={e => handledeletemods(modul.id)}
-                                className="btn btn-danger">Delete
+                                className="btn btn-danger">
+                                    <span className='material-icons'>delete</span>
                         </button>
                 </div>
             </div>
 
-                {isActive && <div>
-                    {modul.events.map((event, index) => {
-                            return <Events key={index} typ={event.evname} start={event.start} end={event.stop}
-                                           weekday={event.weekday} location={event.location} teacher={event.teacher}/>
-                        }
-                    )}
-                </div>}
-
+                {isActive && 
+                    <div className='roundedContainer'>
+                        {modul.events.map((event, index) => {
+                            return <div className='eventContainer'>
+                                        <Events key={index} typ={event.evname} start={event.start} end={event.stop}
+                                        weekday={event.weekday} location={event.location} teacher={event.teacher}/>
+                                    </div>
+                            }
+                        )}
+                    </div>}
         </div>
 };
 export default AccordionItem;

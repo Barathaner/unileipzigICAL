@@ -12,7 +12,7 @@ function App() {
 
 
     function initAllMods() {
-        fetch("/getall").then(
+        fetch("https://unikarlender.de/getall").then(
             res => res.json()
         ).then(
             data => {
@@ -23,7 +23,7 @@ function App() {
 
     function postdata(nameslol) {
 
-        fetch('/moduleswithevents', {
+        fetch('https://unikarlender.de/moduleswithevents', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({"modulnameslist": nameslol})
@@ -90,9 +90,9 @@ function App() {
     return (
         <div className="App">
             <div className="row">
-                <div className="col-1"></div>
+                <div className="col-1 col"></div>
                 <div className="col-10">
-                    <div className="info p-2">
+                    <div className="info p-2 mt-3">
 
                         <svg xmlns="http://www.w3.org/2000/svg" height="32px" fill="currentColor"
                              className="bi bi-info-circle-fill mr" viewBox="0 0 16 16">
@@ -141,12 +141,10 @@ function App() {
             </div>
 
             <div className="row mt-5">
-                <div className="col-1"></div>
+                <div className='col-1'></div>
                 <div className="col-10">
                     <Accordion deleteMods={deleteMods} chosen={chosen}></Accordion>
                 </div>
-
-                <div className="col-1"></div>
             </div>
 
         <Footer></Footer>
