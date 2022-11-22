@@ -386,6 +386,7 @@ def updateDatabase():
             db.create_all()
             fillDatabase()
         print("Updated database")
+    return "done"
 
 
 @app.route('/')
