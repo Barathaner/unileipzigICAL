@@ -270,7 +270,7 @@ def formatDBModullist(moduleLi):
 
 def createICAL(modules):
     cal = Calendar()
-    cal.add('prodid', 'https://unikarlender.com')
+    cal.add('prodid', '-//Karl-Augustin Jahnel IT//unikarlender.de//DE')
     cal.add('version', '2.0')
     start = Holiday.query.filter_by(name="Lehrveranstaltungen (15 Wochen)").one().start
     end = Holiday.query.filter_by(name="Lehrveranstaltungen (15 Wochen)").one().end
