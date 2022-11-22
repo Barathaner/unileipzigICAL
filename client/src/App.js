@@ -67,7 +67,7 @@ function App() {
             .then((blob) => {
                 // Create blob link to download
                 const url = window.URL.createObjectURL(
-                    new Blob([blob]),
+                    new Blob([blob], {type: "text/calendar"}),
                 );
                 const link = document.createElement('a');
                 link.href = url;

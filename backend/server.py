@@ -452,6 +452,8 @@ def ics():
     ics = createICAL(modswithevents)
     response = make_response(ics)
     response.headers["Content-Disposition"] = "attachment; filename=calendar.ics"
+    response.headers["Content-Type"] = "text/calendar; charset=utf-8"
+
     return response
 
 
