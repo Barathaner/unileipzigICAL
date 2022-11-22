@@ -1,4 +1,4 @@
-from flask import (Flask, send_file, request, jsonify)
+from flask import (Flask, send_file, request, jsonify,make_response)
 from flask import send_from_directory
 from flask_cors import CORS
 from flask_cors import cross_origin
@@ -279,6 +279,7 @@ def createICAL(modules):
     cal.add('calscale', 'GREGORIAN')
     cal.add('prodid', '-//Karl-Augustin-Jahnel IT//unikarlender.de//DE')
     cal.add('version', '2.0')
+    cal.add('method', "REQUEST")
     start = Holiday.query.filter_by(name="Lehrveranstaltungen (15 Wochen)").one().start
     end = Holiday.query.filter_by(name="Lehrveranstaltungen (15 Wochen)").one().end
     allHolidays = Holiday.query.all()
@@ -449,11 +450,9 @@ def ics():
         }
         modswithevents.append(modDict)
     ics = createICAL(modswithevents)
-    f = open("calendar.ics", 'wb')
-    f.write(ics)
-    f.close()
-
-    return send_file("calendar.ics", as_attachment=True)
+    response = make_response(ics)
+    response.headers["Content-Disposition"] = "attachment; filename=calendar.ics"
+    return response
 
 
 updateDatabase()
