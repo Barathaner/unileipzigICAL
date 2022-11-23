@@ -6,9 +6,11 @@
   overflow-y: auto;
   flex-direction: column;
   font-family: "Nunito", sans-serif;
-  background-image: linear-gradient(90deg, #410076, #8820dd);
+  background-image: linear-gradient(#410076, #8820dd);
 }
+
 body {
+  padding: 0;
   padding: 0;
   margin: 0;
 }
@@ -35,6 +37,10 @@ body {
   color: darkred;
   border-style: solid;
   border-radius: 30px;
+}
+
+.icalButton {
+  height: 4rem
 }
 
 
