@@ -1,4 +1,4 @@
-.eventtitleContainer {
+.eventTitleContainer {
     display: flex;
     justify-content: start;
     width: 100%;
@@ -8,26 +8,32 @@
     padding-inline: 1rem;
     align-items: center;
     cursor: pointer;
+    text-decoration: none;
+    color: black;
 }
 
-.eventitem {
+.eventTitleContainer:hover {
+    color: black;
+}
+
+.event {
     display: flex;
     justify-content: space-between;
 }
 
-.eventbuttons {
+.eventButtons {
     padding-left: 15px;
 }
 
-.eventbuttons button {
+.eventButtons button {
     border-radius: 12px;
 }
 
-.eventbuttons button span {
+.eventButtons button span {
     margin-block: .25rem;
 }
 
-.eventContainer {
+.eventDetails {
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -38,22 +44,19 @@
     overflow-x: auto;
 }
 
-.eventContainer:first-of-type {
-    margin-top: .5rem;
-}
-
-.eventContainer:not(:last-of-type) {
+.eventDetails:not(:last-of-type) {
     border: 0;
     border-bottom: 1px;
     border-style: solid;
     border-color: lightgray;
 }
 
-.eventitemContainer:not(:first-of-type) {
+.eventContainer:not(:first-of-type) {
     margin-top: 1rem;
 }
 
-.roundedContainer {
+.eventDetailsContainer, .collapse {
+    margin-top: .5rem;
     border-radius: 12px;
     background-color: white;
 

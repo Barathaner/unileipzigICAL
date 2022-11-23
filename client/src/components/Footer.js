@@ -5,10 +5,10 @@ import "./Footer.css";
 function Footer() {
 
     return (
-  <div className="footer text-center">
-    <Link className="mr" to="/impressum">Impressum</Link>
-    <Link to="/datenschutz">Datenschutz</Link>
-  </div>
+      <div className="footer text-center">
+        <Link className="link" to="/impressum">Impressum</Link>
+        <Link className="link" to="/datenschutz">Datenschutz</Link>
+      </div>
     );
 }
 

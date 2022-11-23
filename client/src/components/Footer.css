@@ -1,13 +1,17 @@
-.footer{
-  margin-top: 1rem;
-  padding: 1rem;
-  flex: auto;
-  bottom: 0;
-  left: 0;
-  width: 100%;
+.footer {
+	position: relative;
+	margin-top: 5rem;
+	padding: 1rem;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	clear: both;
 }
 
+.link {
+	color: black;
+}
 
-.mr{
-  margin-right: 15px;
+.link:not(:last-of-type) {
+	margin-right: 2rem;
 }

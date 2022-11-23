@@ -4,20 +4,22 @@
     width: 100%;
     background-color: white;
     padding: 15px;
-    border-radius: 6px;
+    border-radius: 12px;
     background-color: white;
     box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
     overflow: hidden;
     overflow-y: auto;
 }
+
 .searchInputs.row{
-    margin:0px;
+    margin: 0;
 }
 
 .search{
     margin-top: 15px;
     width: 100%;
 }
+
 .input {
     font-size: 18px;
     padding: 15px;
@@ -25,17 +27,17 @@
 
 .searchIcon {
     background-color: white;
-
 }
 
 input:focus {
     outline: none;
 }
-.searchIcon svg {
-    font-size: 35px;
-}
-.dataResult{
 
+.searchIcon svg {
+    font-size: 25px;
+}
+
+.dataResult{
     height: 300px;
     overflow-y: scroll;
 }
