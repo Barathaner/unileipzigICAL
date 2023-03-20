@@ -29,8 +29,8 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 cors = CORS(app)
 crontab = Crontab(app)
-semester1 = 'ws2022'
-semester2 = 'ss2022'
+semester1 = 'ss2023'
+semester2 = 'ws2022'
 
 weekdaydict = {
     "montags": 0,
