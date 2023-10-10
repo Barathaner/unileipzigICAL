@@ -11,26 +11,32 @@ import pytz
 import json
 import os
 from datetime import timedelta, datetime
-from flask_crontab import Crontab
 from sqlalchemy_utils.functions import database_exists, create_database, drop_database
 import time
-
+import dotenv
 import string
 import random
 N = 7
-
-time.sleep(10)
-
+dotenv.load_dotenv("../.env")
 app = Flask(__name__, static_folder='../build', static_url_path='')
-app.config["SECRET_KEY"] = "pogchampsecret"
-app.config[
-    'SQLALCHEMY_DATABASE_URI'] = f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:jamesnorrington@localhost:5432/test'
 db = SQLAlchemy(app)
+
 cors = CORS(app)
-crontab = Crontab(app)
-semester1 = 'ss2023'
-semester2 = 'ws2022'
+
+from datetime import datetime
+
+# Das aktuelle Jahr und der aktuelle Monat werden abgerufen
+current_year = datetime.now().year
+current_month = datetime.now().month
+
+# Bestimmen Sie das Semester basierend auf dem aktuellen Monat
+if current_month >= 4 and current_month <= 9:  # Angenommen, SS ist von April bis September
+    semester = f'ss{current_year}'
+else:
+    semester = f'ws{current_year}'  # Angenommen, WS ist von Oktober bis März des nächsten Jahres
+
 
 weekdaydict = {
     "montags": 0,
@@ -121,13 +127,17 @@ class Holidayuni:
 
 
 def fillDatabase():
-    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester1}/modul.html'
+    url = f'https://www.informatik.uni-leipzig.de/ifijung/10/service/stundenplaene/{semester}/modul.html'
     url2 = f'https://www.uni-leipzig.de/studium/im-studium/akademisches-jahr'
     moduleList = scrapeForTimeTable(url)
     holidaylist = scrapeHolidays(url2)
+    
     for module in moduleList:
-        db.session.add(Modul(module.id, module.name))
-        db.session.commit()
+        existing_module = Modul.query.get(module.id)
+        if existing_module is None:
+            db.session.add(Modul(module.id, module.name))
+            db.session.commit()
+
         for event in module.events:
             db.session.add(ModulEvent(module.id, event.name, event.start, event.stop, event.weekday, event.location,
                                       event.teacher))
@@ -372,13 +382,11 @@ def daterange(date1, date2):
         yield date1 + timedelta(n)
 
 
-@crontab.job(day_of_week="6")
 @app.route('/onlyforme')
 @cross_origin()
 def updateDatabase():
     with app.app_context():
-        if not database_exists(
-                f"postgresql://postgres:{os.environ['POSTGRES_PASSWORD']}@postgres:5432/{os.environ['POSTGRES_DB']}"):
+        if not database_exists('postgresql://postgres:jamesnorrington@localhost:5432/test'):
             db.create_all()
             fillDatabase()
         else:
